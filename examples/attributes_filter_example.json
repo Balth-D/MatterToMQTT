@@ -1,0 +1,51 @@
+{
+  "0x0090": {
+    "name": "electrical_measurement",
+    "attributes": {
+      "0x0000": "power_mode",
+      "0x0001": "number_of_measurement_types",
+      "0x0002": "accuracy",
+      "0x0003": "ranges",
+      "0x0004": "voltage",
+      "0x0008": "active_power",
+      "0x000B": "rms_voltage",
+      "0x000D": "rms_power"
+    }
+  },
+  "0x0400": {
+    "name": "illuminance",
+    "attributes": {
+      "0x0000": "measured_value"
+    }
+  },
+  "0x0402": {
+    "name": "temperature",
+    "attributes": {
+      "0x0000": "measured_value"
+    }
+  },
+  "0x0403": {
+    "name": "pressure",
+    "attributes": {
+      "0x0000": "measured_value"
+    }
+  },
+  "0x0405": {
+    "name": "humidity",
+    "attributes": {
+      "0x0000": "measured_value"
+    }
+  },
+  "0x0406": {
+    "name": "occupancy",
+    "attributes": {
+      "0x0000": "occupancy"
+    }
+  },
+  "0x005B": {
+    "name": "air_quality",
+    "attributes": {
+      "0x0000": "air_quality"
+    }
+  }
+}

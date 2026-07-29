@@ -1,0 +1,27 @@
+[Unit]
+Description=Matter to MQTT Bridge
+Documentation=Matter to MQTT Bridge
+After=python-matter-server.service
+Wants=python-matter-server.service
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/readwrite/MatterToMQTT
+ExecStart=/readwrite/MatterToMQTT/venv/bin/python3 main.py config.yaml
+
+# Restart policy
+Restart=on-failure
+RestartSec=10
+
+# Process management
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=matter-to-mqtt
+
+# Resource limits (optional)
+MemoryLimit=256M
+MemoryAccounting=true
+
+[Install]
+WantedBy=multi-user.target

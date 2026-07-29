@@ -1,0 +1,47 @@
+# Matter-to-MQTT Bridge Configuration
+# This is a YAML configuration file for the Matter-to-MQTT bridge
+# See docs/INSTALLATION.md for more details
+
+# Matter server configuration
+matter:
+  # WebSocket URL of the python-matter-server
+  # Default: ws://127.0.0.1:5580/ws
+  url: ws://127.0.0.1:5580/ws
+
+  # Seconds to wait between reconnect attempts
+  # Default: 5.0
+  reconnect_delay: 5.0
+
+# MQTT broker configuration
+mqtt:
+  # MQTT broker URL (supports mqtt:// and mqtts://)
+  # Default: mqtt://127.0.0.1:1883
+  url: mqtt://<MQTT_BROKER_IP>:1883
+
+  # MQTT topic prefix - all published topics will start with this
+  # Default: matter
+  topic_prefix: matterbridge
+
+  # MQTT authentication (optional)
+  username: <MQTT_USER>
+  password: <MQTT_PASSWORD>
+
+# Attribute filtering configuration
+attributes:
+  # Optional: Path to JSON file with allowed clusters/attributes
+  # If not specified, all attributes will be published
+  # Example: examples/attributes_filter_example.json
+  filter: attributes_filter.json
+
+# Logging configuration
+logging:
+  # Log level: debug, info, warning, error
+  # Default: info
+  level: info
+
+# Advanced settings
+advanced:
+  # Dry run mode: Don't send messages to MQTT, just log what would be sent
+  # Useful for testing
+  # Default: false
+  dry_run: false
