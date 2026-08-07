@@ -1,49 +1,77 @@
 # Matter WebSocket to MQTT Bridge
 
-A Python application that bridges Matter devices with MQTT, enabling full-duplex bidirectional communication:
-- **Download (Matter → MQTT):** Device attribute updates are published to MQTT
-- **Upload (MQTT → Matter):** Commands published to MQTT are sent to Matter devices
+A Python application that bridges Matter devices with MQTT, enabling full-duplex bidirectional communication with real-time device monitoring.
 
-Automatically detects device identifiers and handles both simple single-endpoint and complex multi-endpoint devices with intelligent topic structure.
+## ✨ Key Features
 
-## Disclainer
+- **🔄 Bidirectional Communication**: Attribute updates flow Matter → MQTT, commands flow MQTT → Matter
+- **📊 Node Monitoring**: Automatic discovery and periodic polling of all Matter devices with availability tracking
+- **⏱️ Real-time Updates**: Track last-seen timestamps and connectivity status for each device
+- **📡 Signal Metrics**: Publish WiFi RSSI, Thread RSSI, and Thread LQI signal quality metrics
+- **🎯 Smart Topics**: Automatically detects device identifiers and uses intelligent topic hierarchy
+- **🔧 Flexible Filtering**: Configurable attribute filtering for selective attribute publishing
+- **🌐 Multi-endpoint Support**: Handles both simple single-endpoint and complex multi-endpoint Matter devices
+- **⚙️ Highly Configurable**: YAML-based configuration with sensible defaults
+
+## Disclaimer
 
 This project was made mainly by Copilot. Use it at your own risk!
 
-## Quick Start
+## 📚 Documentation
+
+### For Users & Developers
+
+Start here to get up and running:
+
+- **[Getting Started](docs/guides/INSTALLATION.md)** - Installation and initial setup
+- **[User Guide](docs/guides/QUICK_REFERENCE.md)** - Common tasks and configuration
+- **[Matter → MQTT](docs/guides/MATTER_MQTT_README.md)** - Publishing device attributes to MQTT
+- **[MQTT → Matter](docs/guides/BIDIRECTIONAL_GUIDE.md)** - Sending commands to devices via MQTT
+- **[Node Tracking](docs/guides/NODE_TRACKER_QUICK_REFERENCE.md)** - Monitor device availability and status
+- **[Developer Guide](docs/guides/DEVELOPER_GUIDE.md)** - Development setup and architecture
+
+### For Agents & Technical Reference
+
+Complete implementation details for AI agents and maintainers:
+
+- **[Architecture](docs/specs/ARCHITECTURE.md)** - System design and components
+- **[Implementation Details](docs/specs/)** - Detailed technical specifications
+  - Node Tracker implementation
+  - MQTT publishing system
+  - Module dependencies
+- **[API Reference](docs/specs/NODE_TRACKER.md)** - Python API documentation
+
+## 🚀 Quick Start
 
 ### Installation
 
+See the [Installation Guide](docs/guides/INSTALLATION.md) for detailed setup instructions.
+
 ```bash
-# Clone the repository
+# Clone and setup
 git clone <repository-url>
 cd MatterToMQTT
-
-# Create and activate a Python environment
 python3 -m venv venv
 source venv/bin/activate
-
-# Install dependencies
 pip install -r requirements.txt
 ```
 
-### Quick Usage
+### Basic Usage
 
 ```bash
-# Using default config (config.yaml)
+# Run with default config
 python3 main.py
 
-# Using custom config file
+# Run with custom config
 python3 main.py /path/to/config.yaml
 
-# Dry run mode - test without sending to MQTT
-# (set dry_run: true in config.yaml)
-python3 main.py config.yaml --help  # shows help with new config system
+# Test mode (no MQTT publishing)
+# Set dry_run: true in config.yaml
 ```
 
-## Configuration
+## ⚙️ Configuration
 
-Configuration is managed via a YAML file (see [config.yaml](config.yaml) for defaults).
+Configuration is managed via YAML (see [config.yaml](config.yaml) for all options).
 
 ### Example Configuration
 
@@ -76,7 +104,7 @@ advanced:
 ### Running with Custom Config
 
 ```bash
-# Create custom configuration
+# Create and edit custom configuration
 cp config.yaml my_config.yaml
 nano my_config.yaml
 
@@ -86,248 +114,71 @@ python3 main.py my_config.yaml
 
 ### Configuration File Locations
 
-The application looks for `config.yaml` in the working directory by default:
+The application looks for `config.yaml` in the working directory by default.
 
-```bash
-# Recommended structure for production
+For production deployments, recommended structure:
+
+```
 /opt/MatterToMQTT/
-├── config.yaml           # Main configuration
-├── config.production.yaml # Production override
+├── config.yaml
 ├── main.py
 ├── src/
+├── docs/
 └── venv/
 ```
 
-## Features
+## 📖 What Happens
 
-✓ **Bidirectional Communication**
-- Publish Matter device attributes to MQTT
-- Send MQTT commands to Matter devices
+**Matter → MQTT (Automatic)**
+- Device attributes are published to MQTT topics automatically
+- Example: `matter/living_room_light/on_off/state` → `true`
 
-✓ **Automatic Device Detection**
-- Caches device identifiers (0/40/18 attribute)
-- Detects single vs multi-endpoint devices
-- Handles endpoint mapping intelligently
+**MQTT → Matter (On Command)**
+- Commands published to MQTT topics are sent to Matter devices
+- Example: Publish to `matter/living_room_light/6/command` to control the device
 
-✓ **Flexible Topic Structure**
-- Simple format for single-endpoint devices: `matter/device/cluster/command`
-- Full format for multi-endpoint: `matter/device/endpoint/cluster/command`
-- Human-readable cluster/attribute names
+**Node Monitoring (Continuous)**
+- All Matter devices are discovered on startup
+- Device availability is tracked with periodic polling (default: every 2 minutes)
+- Signal metrics (WiFi RSSI, Thread LQI) are published
+- Last-seen timestamps are updated on every device activity
 
-✓ **Attribute Filtering**
-- Optional JSON filter for selective publishing
-- Supports cluster and attribute whitelisting
-
-✓ **Robust Connection Handling**
-- Automatic reconnection on failures
-- Graceful shutdown with signal handling
-- Configurable reconnect delays
-
-## Command Line
-
-```bash
-# Show help
-python3 main.py --help
-
-# Run with default config.yaml
-python3 main.py
-
-# Run with custom config file
-python3 main.py /path/to/custom/config.yaml
-```
-
-## Documentation
-
-- **[Installation & Setup](docs/INSTALLATION.md)** - Systemd service, auto-start, production deployment
-- **[Architecture](docs/ARCHITECTURE.md)** - System design and component overview
-- **[Bidirectional Guide](docs/BIDIRECTIONAL_GUIDE.md)** - Full guide to command sending (download & upload)
-- **[Quick Reference](docs/QUICK_REFERENCE.md)** - Copy-paste command examples
-- **[Module Dependencies](docs/MODULE_DEPENDENCIES.md)** - Dependency graph and data flow
-- **[Developer Guide](docs/DEVELOPER_GUIDE.md)** - Contributing and extending the code
-
-## Examples
-
-### Publish Attributes (Matter → MQTT)
-
-Automatically published by the bridge:
-
-```
-matter/light_123/on_off/state              → true
-matter/light_123/level_control/level       → 200
-matter/sensor_456/temperature/measured     → 22.5
-```
-
-### Send Commands (MQTT → Matter)
-
-**Simple format** (endpoint defaults to 1):
-
-```bash
-mosquitto_pub -t "matter/light_123/6/command" \
-  -m '{"command":"On","payload":{}}'
-
-mosquitto_pub -t "matter/light_123/8/command" \
-  -m '{"command":"MoveToLevel","payload":{"level":200,"transition_time":0}}'
-```
-
-**Full format** (explicit endpoint):
-
-```bash
-mosquitto_pub -t "matter/device/1/6/command" \
-  -m '{"command":"On","payload":{}}'
-
-mosquitto_pub -t "matter/bridge/2/8/command" \
-  -m '{"command":"MoveToLevel","payload":{"level":150,"transition_time":0}}'
-```
-
-## Testing
-
-```bash
-# Run unit tests
-python3 tests/test_commands.py
-
-# Run command examples
-python3 examples/example_commands.py <hostname> <port>
-```
-
-## MQTT Topic Structure
-
-### Download (Attributes)
-
-**Simple devices** (endpoints 0-1):
-```
-matter/<device_id>/<cluster>/<attribute>
-```
-
-**Multi-endpoint devices**:
-```
-matter/<device_id>/<endpoint>/<cluster>/<attribute>
-```
-
-### Upload (Commands)
-
-**Simple format**:
-```
-matter/<device_id>/<cluster>/command
-```
-
-**Full format**:
-```
-matter/<device_id>/<endpoint>/<cluster>/command
-```
-
-## Project Structure
+## 🔍 Project Structure
 
 ```
 MatterToMQTT/
-├── main.py                  # Entry point
-├── requirements.txt         # Dependencies
-├── README.md               # This file
-│
-├── src/                    # Python source code
-│   ├── __init__.py
-│   ├── config.py           # Configuration management
-│   ├── logger_config.py    # Logging setup
-│   ├── attribute_filter.py # Attribute filtering
-│   ├── device_manager.py   # Device tracking
-│   ├── mqtt_bridge.py      # MQTT communication
-│   ├── matter_client.py    # Matter WebSocket client
-│   ├── command_handler.py  # Command parsing & routing
-│   └── utils.py            # Utility functions
-│
-├── docs/                   # Documentation
-│   ├── ARCHITECTURE.md
-│   ├── BIDIRECTIONAL_GUIDE.md
-│   ├── QUICK_REFERENCE.md
-│   ├── MODULE_DEPENDENCIES.md
-│   └── DEVELOPER_GUIDE.md
-│
-├── tests/                  # Unit tests
-│   └── test_commands.py
-│
-└── examples/               # Examples
-    ├── example_commands.py
-    └── attributes_filter_example.json
+├── main.py                     # Application entry point
+├── config.yaml                 # Configuration file
+├── requirements.txt            # Python dependencies
+├── src/
+│   ├── matter_client.py        # Matter WebSocket client
+│   ├── mqtt_bridge.py          # MQTT broker interface
+│   ├── device_manager.py       # Device caching & identification
+│   ├── node_tracker.py         # Device monitoring & availability
+│   ├── attribute_filter.py     # Attribute whitelisting
+│   └── ...
+├── docs/
+│   ├── guides/                 # User & developer guides
+│   │   ├── INSTALLATION.md
+│   │   ├── QUICK_REFERENCE.md
+│   │   └── ...
+│   └── specs/                  # Technical specifications
+│       ├── ARCHITECTURE.md
+│       ├── IMPLEMENTATION_COMPLETE.md
+│       └── ...
+└── tests/                      # Test suite
 ```
 
-## Requirements
+## 📝 License
 
-- Python 3.10+
-- [paho-mqtt](https://github.com/eclipse/paho.mqtt.python)
-- [websockets](https://github.com/python-websockets/websockets)
-- [python-matter-server](https://github.com/matter-js/python-matter-server) (running separately)
-
-## Configuration Example
-
-Filter file (`attributes_filter_example.json`):
-
-```json
-{
-  "0x0006": {
-    "name": "on_off",
-    "attributes": {
-      "0x0000": "state"
-    }
-  },
-  "0x0008": {
-    "name": "level_control",
-    "attributes": {
-      "0x0000": "current_level",
-      "0x000F": "options"
-    }
-  },
-  "0x0402": {
-    "name": "temperature",
-    "attributes": {
-      "0x0000": "measured_value"
-    }
-  }
-}
-```
-
-## Troubleshooting
-
-### Connection Issues
-
-```bash
-# Check Matter server connectivity
-python3 main.py --debug debug 2>&1 | grep -i "connected\|error"
-
-# Test MQTT broker
-mosquitto_pub -h <broker> -t test -m "hello"
-```
-
-### Commands Not Sending
-
-```bash
-# Enable debug logging
-python3 main.py --debug debug
-
-# Check device ID caching
-python3 main.py --debug debug 2>&1 | grep "Cached identifier"
-
-# Dry run to test without MQTT
-python3 main.py --dry-run --debug debug
-```
-
-## Development
-
-See [DEVELOPER_GUIDE.md](docs/DEVELOPER_GUIDE.md) for:
-- Contributing guidelines
-- Adding new modules
-- Extending functionality
-- Testing new features
-
-## License
-
-Licensed under GPLv3
-
-## Support
-
-For issues and questions, refer to:
-- [BIDIRECTIONAL_GUIDE.md](docs/BIDIRECTIONAL_GUIDE.md) - For command examples
-- [ARCHITECTURE.md](docs/ARCHITECTURE.md) - For system design details
-- [MODULE_DEPENDENCIES.md](docs/MODULE_DEPENDENCIES.md) - For code structure
+This project was made mainly by Copilot. Use it at your own risk!
 
 ---
 
-**Version 2.1.1** - Full duplex bidirectional communication with dual-format topic support
+## 🙋 Need Help?
+
+- **Getting started?** → See [Installation Guide](docs/guides/INSTALLATION.md)
+- **How do I configure this?** → See [Quick Reference](docs/guides/QUICK_REFERENCE.md)
+- **I want to send commands to devices** → See [Bidirectional Guide](docs/guides/BIDIRECTIONAL_GUIDE.md)
+- **I'm a developer** → See [Developer Guide](docs/guides/DEVELOPER_GUIDE.md)
+- **I need implementation details** → See [docs/specs/](docs/specs/)

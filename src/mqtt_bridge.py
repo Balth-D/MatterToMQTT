@@ -38,6 +38,7 @@ class MQTTBridge:
         
         self._is_connected = False
         self._on_message_callback: Callable[[str, str], None] | None = None
+        self._on_client_connect_callback: Callable[[], None] | None = None
         self._subscribed_topics: set[str] = set()
         self._setup_callbacks()
 
@@ -56,6 +57,13 @@ class MQTTBridge:
                     for topic in list(self._subscribed_topics):
                         client.subscribe(topic)
                         logger.debug("Re-subscribed to %s", topic)
+                    
+                    # Call client connect callback
+                    if self._on_client_connect_callback:
+                        try:
+                            self._on_client_connect_callback()
+                        except Exception as e:
+                            logger.error("Error in client connect callback: %s", e)
                 else:
                     logger.error("Failed to connect to MQTT broker: %s", reason_code)
                     self._is_connected = False
@@ -82,6 +90,13 @@ class MQTTBridge:
                     for topic in list(self._subscribed_topics):
                         client.subscribe(topic)
                         logger.debug("Re-subscribed to %s", topic)
+                    
+                    # Call client connect callback
+                    if self._on_client_connect_callback:
+                        try:
+                            self._on_client_connect_callback()
+                        except Exception as e:
+                            logger.error("Error in client connect callback: %s", e)
                 else:
                     logger.error("Failed to connect to MQTT broker: %s", rc)
                     self._is_connected = False
@@ -148,6 +163,15 @@ class MQTTBridge:
         self._on_message_callback = on_message
         self.client.subscribe(topic)
         logger.info("Subscribed to topic: %s", topic)
+
+    def on_client_connect(self, callback: Callable[[], None]) -> None:
+        """Register a callback to be called when a client connects to MQTT.
+
+        Args:
+            callback: Callback function to call on client connection
+        """
+        self._on_client_connect_callback = callback
+        logger.debug("Registered on_client_connect callback")
 
     def unsubscribe(self, topic: str) -> None:
         """Unsubscribe from MQTT topic.

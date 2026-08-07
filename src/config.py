@@ -29,6 +29,7 @@ DEFAULT_CONFIG = {
     },
     "advanced": {
         "dry_run": False,
+        "nodes_poll_interval": 120,  # seconds, default 2 minutes
     },
 }
 
@@ -46,6 +47,7 @@ class Config:
     debug_level: str
     dry_run: bool
     reconnect_delay: float
+    nodes_poll_interval: float
 
     @staticmethod
     def from_yaml(config_path: str) -> "Config":
@@ -109,6 +111,7 @@ class Config:
             debug_level=logging_cfg.get("level", "info"),
             dry_run=advanced.get("dry_run", False),
             reconnect_delay=float(matter.get("reconnect_delay", 5.0)),
+            nodes_poll_interval=float(advanced.get("nodes_poll_interval", 120)),
         )
 
 

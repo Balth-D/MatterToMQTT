@@ -39,6 +39,7 @@ class DeviceManager:
             # If we received something and this something is only alphanumeric, cache it
             if identifier_value is not None and node_id not in self._node_identifier_cache and bool(match("^[A-Za-z0-9]*$", str(identifier_value))):
                 identifier = str(identifier_value).strip()
+                identifier = "0x" + identifier.lower()
                 if identifier:
                     self._node_identifier_cache[node_id] = identifier
                     logger.info("Cached identifier for node %s: %s", node_id, identifier)

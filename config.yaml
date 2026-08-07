@@ -45,3 +45,8 @@ advanced:
   # Useful for testing
   # Default: false
   dry_run: false
+
+  # Node polling interval in seconds
+  # The application will periodically poll the get_nodes command to track node availability
+  # Default: 120 (2 minutes)
+  nodes_poll_interval: 120

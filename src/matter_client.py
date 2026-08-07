@@ -276,3 +276,72 @@ class MatterClient:
             websocket: The connected websocket object
         """
         self._websocket = websocket
+
+    async def get_nodes(self) -> list[dict[str, Any]] | None:
+        """Request the current list of nodes from the Matter server.
+
+        Opens a separate WebSocket connection to avoid conflicts with the main
+        consume_messages() loop that also listens on the websocket.
+
+        Returns:
+            List of node dictionaries if successful, None on error
+        """
+        logger.debug("Opening separate WebSocket connection for get_nodes polling")
+        
+        try:
+            async with ws_connect(
+                self.ws_url,
+                ping_interval=20,
+                ping_timeout=20,
+                max_size=None,
+            ) as websocket:
+                logger.debug("Connected to %s for get_nodes polling", self.ws_url)
+                
+                message_id = "poll_nodes"
+                message = {
+                    "message_id": message_id,
+                    "command": "get_nodes",
+                }
+
+                try:
+                    await websocket.send(json.dumps(message))
+                    logger.debug("Sent get_nodes command")
+
+                    # Wait for response with a timeout
+                    timeout_count = 0
+                    max_timeouts = 3
+
+                    while timeout_count < max_timeouts:
+                        try:
+                            response = await asyncio.wait_for(websocket.recv(), timeout=5.0)
+                            if isinstance(response, bytes):
+                                response = response.decode("utf-8", errors="replace")
+
+                            data = json.loads(response)
+
+                            # Check if this is our response (match by message_id)
+                            if isinstance(data, dict) and data.get("message_id") == message_id:
+                                result = data.get("result")
+                                if isinstance(result, list):
+                                    logger.debug("Received nodes list with %d node(s)", len(result))
+                                    return result
+                                else:
+                                    logger.warning("Invalid result in get_nodes response: %s", type(result))
+                                    return None
+                        except asyncio.TimeoutError:
+                            timeout_count += 1
+                            logger.debug("Timeout waiting for get_nodes response (%d/%d)", timeout_count, max_timeouts)
+                        except json.JSONDecodeError:
+                            logger.debug("Failed to parse message while waiting for get_nodes response")
+                            continue
+
+                    logger.warning("Timeout waiting for get_nodes response after %d attempts", max_timeouts)
+                    return None
+
+                except Exception as e:
+                    logger.error("Failed to get nodes: %s", e)
+                    return None
+
+        except (ConnectionClosed, OSError) as e:
+            logger.error("Failed to connect for get_nodes polling: %s", e)
+            return None
